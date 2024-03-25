@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 import React from 'react';
-import {render} from 'ink';
+import {Text, render} from 'ink';
 import meow from 'meow';
 
 import {ARGUMENTS} from './types/cli.enum.js';
 import Install from './screens/install.js';
+import {checkIfItsGitRepository} from './utils/git/git.utils.js';
 
 const cli = meow(
 	`
@@ -12,8 +13,15 @@ const cli = meow(
 	  $ components-cli
 
 	Options
+	  install  - choose a branch to install
+
+	  install latest - install the latest version (main)
 
 	Examples
+	  $ components-cli install
+	  	It will ask you to choose a branch to install
+		
+	  $ components-cli install latest
 `,
 	{
 		importMeta: import.meta,
@@ -22,12 +30,21 @@ const cli = meow(
 
 switch (cli.input.at(0)) {
 	case ARGUMENTS.INSTALL: {
-		console.log('install');
-		render(<Install arg={cli.input.at(1)} />);
+		checkIfItsGitRepository(process.cwd()).then(isGitRepository => {
+			isGitRepository;
+			if (!isGitRepository) {
+				render(
+					<Text>
+						<Text color="red">Error :</Text> it is not a git repository
+					</Text>,
+				);
+				process.exit(1);
+			}
+			render(<Install arg={cli.input.at(1)} />);
+		});
 		break;
 	}
 	default: {
-		console.log('default');
 		cli.showHelp();
 		break;
 	}
